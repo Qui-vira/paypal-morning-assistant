@@ -1,0 +1,76 @@
+{
+  "now": "08:58",
+  "owner": "Big Quiv",
+  "first_meeting": "09:20",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Reply to the WEEX brand brief",
+      "estimate_min": 10,
+      "due": "today",
+      "notes": "They asked for a rate card yesterday"
+    },
+    {
+      "id": "t2",
+      "title": "Edit Day 15 of the challenge",
+      "estimate_min": 90,
+      "due": "today",
+      "notes": "Footage is ready"
+    },
+    {
+      "id": "t3",
+      "title": "Invoice Adaeze Studios for the logo animation",
+      "estimate_min": 5,
+      "due": "overdue",
+      "notes": "Delivered 9 days ago, not paid"
+    },
+    {
+      "id": "t4",
+      "title": "Prep notes for the 9:20 call with the agency",
+      "estimate_min": 10,
+      "due": "today",
+      "notes": "Call is about a 3-video retainer"
+    },
+    {
+      "id": "t5",
+      "title": "Clear the email inbox",
+      "estimate_min": 25,
+      "due": "this week",
+      "notes": ""
+    },
+    {
+      "id": "t6",
+      "title": "Post on X",
+      "estimate_min": 5,
+      "due": "today",
+      "notes": "2 posts a day"
+    }
+  ],
+  "calendar": [
+    {
+      "time": "09:20",
+      "title": "Call with the agency (3-video retainer)",
+      "minutes": 30
+    },
+    {
+      "time": "12:00",
+      "title": "Lunch",
+      "minutes": 45
+    },
+    {
+      "time": "15:00",
+      "title": "Shoot Day 16",
+      "minutes": 90
+    }
+  ],
+  "clients_who_owe": [
+    {
+      "id": "c1",
+      "name": "Adaeze Studios",
+      "item": "Logo animation, 15 seconds",
+      "amount": "250.00",
+      "currency": "USD",
+      "days_overdue": 9
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F3EE; --card: #FFFFFF; --ink: #1B2433; --muted: #6B7383; --line: #E7E3DA;
+    --gold: #E8A33D; --gold-soft: #FBEBD2; --green: #1F9D63; --green-soft: #DDF3E8; --red: #D9534F;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 Karla, system-ui, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 22px 36px; }
+  .brand { display: flex; align-items: center; gap: 12px; font: 800 24px "Bricolage Grotesque", sans-serif; }
+  .dot { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; color: #fff; font-size: 18px; }
+  .clock { color: var(--muted); font-weight: 600; }
+  main { display: grid; grid-template-columns: 400px 1fr 360px; gap: 22px; padding: 0 36px 36px; align-items: start; }
+  .card { background: var(--card); border-radius: 18px; padding: 20px 22px; box-shadow: 0 1px 2px rgba(27,36,51,.05), 0 8px 24px rgba(27,36,51,.06); }
+  h2 { font: 700 15px "Bricolage Grotesque", sans-serif; letter-spacing: .02em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  .task { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); }
+  .task:first-of-type { border-top: 0; }
+  .task input[type=text] { border: 0; font: 600 15px Karla, sans-serif; color: var(--ink); width: 100%; background: transparent; padding: 0; }
+  .task input[type=text]:focus { outline: 2px solid var(--gold-soft); border-radius: 6px; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: #EEF0F3; margin-left: 6px; }
+  .tag.overdue { background: #FBE3E2; color: var(--red); }
+  .cal { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .cal:first-of-type { border-top: 0; }
+  .cal b { width: 52px; font-variant-numeric: tabular-nums; }
+  .ask { display: flex; gap: 10px; }
+  .ask textarea { flex: 1; resize: none; height: 62px; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; font: 500 17px Karla, sans-serif; color: var(--ink); background: #FCFBF8; }
+  .ask textarea:focus { outline: none; border-color: var(--gold); }
+  button { border: 0; border-radius: 14px; padding: 0 22px; font: 700 16px Karla, sans-serif; cursor: pointer; background: var(--ink); color: #fff; }
+  button.gold { background: var(--gold); color: var(--ink); }
+  button:disabled { opacity: .55; cursor: wait; }
+  #plan { margin-top: 18px; }
+  .summary { font: 700 20px "Bricolage Grotesque", sans-serif; margin: 4px 0 14px; }
+  .step { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); opacity: 0; transform: translateY(8px); transition: .35s; }
+  .step.in { opacity: 1; transform: none; }
+  .step b { font-variant-numeric: tabular-nums; font-size: 17px; }
+  .step .t { font-weight: 700; font-size: 17px; }
+  .step .w { color: var(--muted); font-size: 14px; }
+  .mins { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .later { margin-top: 10px; color: var(--muted); font-size: 14px; }
+  .thinking { color: var(--muted); font-weight: 600; padding: 18px 0; }
+  .inv-empty { color: var(--muted); }
+  .inv { border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; }
+  .inv .amt { font: 800 34px "Bricolage Grotesque", sans-serif; margin: 6px 0; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .04em; padding: 3px 10px; border-radius: 99px; background: var(--green-soft); color: var(--green); }
+  .badge.test { background: var(--gold-soft); color: #9A6414; margin-left: 6px; }
+  .row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .row span:first-child { color: var(--muted); }
+  .err { color: var(--red); font-weight: 600; font-size: 14px; margin-top: 10px; }
+  .toast { position: fixed; right: 36px; bottom: 36px; background: var(--ink); color: #fff; border-radius: 16px; padding: 16px 20px; display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 17px; box-shadow: 0 16px 40px rgba(27,36,51,.25); transform: translateY(calc(100% + 80px)); opacity: 0; transition: .45s cubic-bezier(.2,.9,.3,1.2); }
+  .toast.on { transform: none; opacity: 1; }
+  .toast .dot { width: 28px; height: 28px; font-size: 15px; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="dot">☀</div>Morning Assistant</div>
+  <div class="clock" id="clock"></div>
+</header>
+<main>
+  <section>
+    <div class="card"><h2>Tasks</h2><div id="tasks"></div></div>
+    <div class="card" style="margin-top:22px"><h2>Today</h2><div id="calendar"></div></div>
+  </section>
+  <section class="card">
+    <h2>Ask</h2>
+    <div class="ask">
+      <textarea id="req" placeholder="Plan my morning. I have 20 minutes before my first meeting."></textarea>
+      <button id="go">Plan</button>
+    </div>
+    <div id="plan"></div>
+  </section>
+  <section class="card">
+    <h2>Invoices</h2>
+    <div id="invoice"><div class="inv-empty">No invoice sent yet.</div></div>
+  </section>
+</main>
+<div class="toast" id="toast"><div class="dot">✓</div><span>Your next task: Stop procrastinating.</span></div>
+<script>
+let data, now;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function tick() {
+  const d = new Date();
+  now = (data && data.now) || d.toTimeString().slice(0, 5);  // data.json "now" fixes the clock for filming
+  $("clock").textContent = d.toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long"}) + " · " + now;
+}
+async function loadData() {
+  data = await (await fetch("/api/data")).json();
+  tick();
+  $("tasks").innerHTML = data.tasks.map((t, i) => `
+    <div class="task"><div style="flex:1">
+      <input type="text" value="${esc(t.title)}" data-i="${i}">
+      <div class="meta">${t.estimate_min} min<span class="tag ${t.due === "overdue" ? "overdue" : ""}">${esc(t.due)}</span></div>
+    </div></div>`).join("");
+  $("calendar").innerHTML = data.calendar.map(c => `<div class="cal"><b>${c.time}</b><span>${esc(c.title)}</span></div>`).join("");
+  document.querySelectorAll(".task input").forEach(el => el.addEventListener("change", async () => {
+    data.tasks[el.dataset.i].title = el.value;
+    await fetch("/api/data", {method: "POST", body: JSON.stringify(data)});
+  }));
+}
+async function post(path, body) {
+  const r = await fetch(path, {method: "POST", body: JSON.stringify(body)});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || "Something went wrong");
+  return j;
+}
+$("go").onclick = async () => {
+  const request = $("req").value.trim() || $("req").placeholder;
+  $("go").disabled = true;
+  $("plan").innerHTML = `<div class="thinking">Planning your morning…</div>`;
+  try {
+    const p = await post("/api/plan", {request, now});
+    $("plan").innerHTML = `<div class="summary">${esc(p.summary)}</div>` +
+      p.steps.map(s => `<div class="step"><b>${s.start}</b><div><div class="t">${esc(s.task)}</div><div class="w">${esc(s.why)}</div></div><span class="mins">${s.minutes} min</span></div>`).join("") +
+      (p.later.length ? `<div class="later"><b>Later:</b> ${p.later.map(esc).join(" · ")}</div>` : "");
+    document.querySelectorAll(".step").forEach((el, i) => setTimeout(() => el.classList.add("in"), 120 * i));
+    if (p.invoice_client_id) {
+      const c = data.clients_who_owe.find(x => x.id === p.invoice_client_id);
+      if (c) $("invoice").innerHTML = `<div class="inv"><div class="meta">${esc(c.name)} · ${c.days_overdue} days overdue</div>
+        <div class="amt">$${c.amount}</div><div class="meta">${esc(c.item)}</div>
+        <button class="gold" id="send" style="margin-top:14px;height:46px;width:100%">Send PayPal invoice</button></div>`;
+      $("send").onclick = () => sendInvoice(c.id);
+    }
+  } catch (e) { $("plan").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  $("go").disabled = false;
+};
+async function sendInvoice(id) {
+  $("send").disabled = true; $("send").textContent = "Sending…";
+  try {
+    const v = await post("/api/invoice", {client_id: id});
+    $("invoice").innerHTML = `<div class="inv"><span class="badge">${esc(v.status)}</span><span class="badge test">PAYPAL SANDBOX · TEST MONEY</span>
+      <div class="amt">$${v.amount}</div><div class="meta" style="margin-bottom:10px">${esc(v.item)}</div>
+      <div class="row"><span>To</span><span>${esc(v.client)}</span></div>
+      <div class="row"><span>Invoice</span><span>${esc(v.number || v.id)}</span></div>
+      ${v.link ? `<div class="row"><span>Pay link</span><a href="${esc(v.link)}" target="_blank">Open</a></div>` : ""}</div>`;
+    setTimeout(() => $("toast").classList.add("on"), 900);
+  } catch (e) {
+    $("send").disabled = false; $("send").textContent = "Send PayPal invoice";
+    $("invoice").insertAdjacentHTML("beforeend", `<div class="err">${esc(e.message)}</div>`);
+  }
+}
+$("req").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("go").click(); } });
+tick(); setInterval(tick, 10000); loadData();
+</script>
+</body>
+</html>

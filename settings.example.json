@@ -1,0 +1,6 @@
+{
+  "paypal_client_id": "your sandbox app Client ID from developer.paypal.com/dashboard",
+  "paypal_client_secret": "your sandbox app Secret",
+  "invoicer_name": "Big Quiv",
+  "sandbox_customer_email": "the email of a sandbox PERSONAL test account (Dashboard > Sandbox accounts)"
+}
