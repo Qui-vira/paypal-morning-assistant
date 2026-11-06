@@ -8,6 +8,21 @@ fits in the window, the plan includes it, and one click sends that client a real
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/).
 
+## Try it now (for judges)
+
+**Live demo: https://morning-assistant-production.up.railway.app**
+
+No account or keys needed. The demo is already connected to Claude and to a PayPal **sandbox** business account.
+
+1. Open the link. The sample morning (tasks, calendar, clients who owe) is loaded.
+2. Keep the request *"Plan my morning. I have 20 minutes before my first meeting."* (or type your own) and press **Plan**.
+   Claude returns a timed plan within about 20 seconds.
+3. If the plan includes an invoice step, press **Send PayPal invoice**. The app creates, sends and reads back a real
+   PayPal sandbox invoice (test money only) and shows its number, status (`SENT`) and the PayPal invoice link.
+
+The hosted demo allows 40 plan or invoice calls per visitor per hour, and it does not save changes to the sample data.
+To run it with your own keys, see **Run it** below.
+
 ## What it does
 
 - **Plans the morning with AI.** Claude (Anthropic) gets the request, the task list, today's calendar and the unpaid
@@ -45,6 +60,9 @@ python app.py
 ```
 
 4. Open http://localhost:8615, type your request, press **Plan**, then **Send PayPal invoice**.
+
+On a host, set `PORT`, `ANTHROPIC_API_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` and
+`SANDBOX_CUSTOMER_EMAIL` as environment variables instead of `settings.json` (`Procfile` runs `python app.py`).
 
 Your tasks, calendar and clients live in `data.json`. Edit it to try your own morning.
 

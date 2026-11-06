@@ -1,0 +1,5 @@
+demo/
+__pycache__/
+.env
+settings.json
+invoices.log.json

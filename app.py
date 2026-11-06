@@ -16,7 +16,8 @@ from pydantic import BaseModel
 
 HERE = Path(__file__).parent
 VAULT_ENV = HERE / ".env"
-PORT = 8615
+PORT = int(os.environ.get("PORT", 8615))
+HOSTED = bool(os.environ.get("PORT"))     # set by the host (Railway): public judge demo
 PAYPAL = "https://api-m.sandbox.paypal.com"  # sandbox only, on purpose
 MODEL = "claude-opus-5-5"
 
@@ -102,8 +103,16 @@ def paypal(method, path, token=None, body=None, basic=None, form=None):
         raise RuntimeError(f"PayPal said {e.code}: {detail}")
 
 
+def paypal_settings():
+    """PayPal sandbox keys: environment variables on the hosted demo, settings.json when run locally."""
+    if os.environ.get("PAYPAL_CLIENT_ID"):
+        return {"paypal_client_id": os.environ["PAYPAL_CLIENT_ID"], "paypal_client_secret": os.environ["PAYPAL_CLIENT_SECRET"],
+                "sandbox_customer_email": os.environ["SANDBOX_CUSTOMER_EMAIL"], "invoicer_name": os.environ.get("INVOICER_NAME", "Big Quiv")}
+    return load("settings.json")
+
+
 def send_invoice(client_id):
-    s = load("settings.json")
+    s = paypal_settings()
     if not s or not s.get("paypal_client_id") or "your sandbox" in s.get("paypal_client_id", ""):
         raise RuntimeError("Add your PayPal sandbox keys to settings.json first (copy settings.example.json).")
     client = next(c for c in load("data.json")["clients_who_owe"] if c["id"] == client_id)
@@ -124,13 +133,26 @@ def send_invoice(client_id):
            "client": client["name"], "item": client["item"], "amount": client["amount"], "currency": client["currency"],
            "to": email, "link": inv.get("detail", {}).get("metadata", {}).get("recipient_view_url"),
            "sandbox": True, "at": datetime.now().isoformat(timespec="seconds")}
-    log = load("invoices.log.json", [])
-    log.append(out)
-    (HERE / "invoices.log.json").write_text(json.dumps(log, indent=1), encoding="utf-8")
+    if not HOSTED:
+        log = load("invoices.log.json", [])
+        log.append(out)
+        (HERE / "invoices.log.json").write_text(json.dumps(log, indent=1), encoding="utf-8")
     return out
 
 
 # ---------- web server ----------
+
+_hits = {}
+
+
+def allow(h, per_hour=40):
+    """Hosted demo only: at most 40 plan/invoice calls per visitor per hour, so the public demo cannot be drained."""
+    ip = (h.headers.get("X-Forwarded-For") or h.client_address[0]).split(",")[0].strip()
+    now = datetime.now().timestamp(); recent = [t for t in _hits.get(ip, []) if now - t < 3600]
+    if len(recent) >= per_hour:
+        _hits[ip] = recent; return False
+    recent.append(now); _hits[ip] = recent; return True
+
 
 class Handler(BaseHTTPRequestHandler):
     def send(self, code, obj, ctype="application/json"):
@@ -151,11 +173,15 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
         try:
+            if HOSTED and self.path in ("/api/plan", "/api/invoice") and not allow(self):
+                return self.send(429, {"error": "Demo limit reached for this hour. Please try again later."})
             if self.path == "/api/plan":
                 return self.send(200, make_plan(body["request"], body.get("now") or datetime.now().strftime("%H:%M")))
             if self.path == "/api/invoice":
                 return self.send(200, send_invoice(body["client_id"]))
             if self.path == "/api/data":
+                if HOSTED:   # the public demo keeps the sample morning; edits stay in the visitor's browser
+                    return self.send(200, {"ok": True, "saved": False})
                 (HERE / "data.json").write_text(json.dumps(body, indent=2), encoding="utf-8")
                 return self.send(200, {"ok": True})
             self.send(404, {"error": "not found"})
@@ -167,5 +193,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"Morning Assistant on http://localhost:{PORT}")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    host = "0.0.0.0" if HOSTED else "127.0.0.1"
+    print(f"Morning Assistant on http://{host}:{PORT}")
+    ThreadingHTTPServer((host, PORT), Handler).serve_forever()
